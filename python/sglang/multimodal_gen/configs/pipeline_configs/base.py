@@ -97,6 +97,12 @@ class STA_Mode(str, Enum):
     NONE = None
 
 
+class CFG_CombineMode(Enum):
+    """Choice of Classifier Free Guidance Formular"""
+    CFG_COMBINE_UNCOND_PLULS = auto()  # noise_pred_uncond + guidance_scale * (noise_pred_cond - noise_pred_uncond)  as in hf/diffusers
+    CFG_COMBINE_COND_PLUS = auto()     # noise_pred_cond + guidance_scale * (noise_pred_cond - noise_pred_uncond)  as in paper
+
+
 def preprocess_text(prompt: str) -> str:
     return prompt
 
@@ -161,6 +167,7 @@ class PipelineConfig:
     """The base configuration class for a generation pipeline."""
 
     task_type: ModelTaskType = ModelTaskType.I2I
+    cfg_combine_mode: CFG_CombineMode = CFG_CombineMode.CFG_COMBINE_UNCOND_PLULS
     skip_input_image_preprocess: bool = False
 
     model_path: str = ""

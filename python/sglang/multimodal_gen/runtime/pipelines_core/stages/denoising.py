@@ -20,7 +20,11 @@ from einops import rearrange
 from tqdm.auto import tqdm
 
 from sglang.multimodal_gen import envs
-from sglang.multimodal_gen.configs.pipeline_configs.base import ModelTaskType, STA_Mode, CFG_CombineMode
+from sglang.multimodal_gen.configs.pipeline_configs.base import (
+    CFG_CombineMode,
+    ModelTaskType,
+    STA_Mode,
+)
 from sglang.multimodal_gen.configs.pipeline_configs.wan import (
     Wan2_2_TI2V_5B_Config,
 )
@@ -1438,13 +1442,19 @@ class DenoisingStage(PipelineStage):
             #   final = s*cond + (1-s)*uncond
             if cfg_rank == 0:
                 assert noise_pred_cond is not None
-                if server_args.pipeline_config.cfg_combine_mode == CFG_CombineMode.CFG_COMBINE_UNCOND_PLULS:
+                if (
+                    server_args.pipeline_config.cfg_combine_mode
+                    == CFG_CombineMode.CFG_COMBINE_UNCOND_PLUS
+                ):
                     partial = current_guidance_scale * noise_pred_cond
                 else:
                     partial = noise_pred_cond * (1 + current_guidance_scale)
             else:
                 assert noise_pred_uncond is not None
-                if server_args.pipeline_config.cfg_combine_mode == CFG_CombineMode.CFG_COMBINE_UNCOND_PLULS:
+                if (
+                    server_args.pipeline_config.cfg_combine_mode
+                    == CFG_CombineMode.CFG_COMBINE_UNCOND_PLUS
+                ):
                     partial = (1 - current_guidance_scale) * noise_pred_uncond
                 else:
                     partial = noise_pred_uncond * (-current_guidance_scale)
@@ -1489,13 +1499,16 @@ class DenoisingStage(PipelineStage):
         else:
             # Serial CFG: both cond and uncond are available locally
             assert noise_pred_cond is not None and noise_pred_uncond is not None
-            if server_args.pipeline_config.cfg_combine_mode == CFG_CombineMode.CFG_COMBINE_UNCOND_PLULS:
+            if (
+                server_args.pipeline_config.cfg_combine_mode
+                == CFG_CombineMode.CFG_COMBINE_UNCOND_PLUS
+            ):
                 noise_pred = noise_pred_uncond + current_guidance_scale * (
-                   noise_pred_cond - noise_pred_uncond
+                    noise_pred_cond - noise_pred_uncond
                 )
             else:
                 noise_pred = noise_pred_cond + current_guidance_scale * (
-                   noise_pred_cond - noise_pred_uncond
+                    noise_pred_cond - noise_pred_uncond
                 )
 
             if batch.cfg_normalization and float(batch.cfg_normalization) > 0:
